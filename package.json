@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "private": true,
+  "name": "speak-a-site",
+  "private": false,
   "sideEffects": false,
   "type": "module",
   "scripts": {

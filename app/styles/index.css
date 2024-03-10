@@ -1,6 +1,7 @@
-#container {
+.container {
 	height: 100%;
 	width: 100%;
+	padding: 20px;
 }
 
 #dynamic-content {
@@ -10,6 +11,12 @@
 
 #cta {
 	position: fixed;
-	bottom: 10px;
-	right: 10px;
+	bottom: 16px;
+	right: 16px;
+
+	.loading {
+		background-color: white;
+		font-size: 1.2rem;
+		padding: 0.4rem 0.8rem;
+	}
 }
