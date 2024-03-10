@@ -6,14 +6,10 @@ import {
 	ScrollRestoration,
 } from '@remix-run/react';
 import type { LinksFunction } from '@remix-run/cloudflare';
-import reset from '~/styles/reset.css?url';
-import shared from '~/styles/shared.css?url';
+import styles from '~/styles/global.css?url';
 
 export const links: LinksFunction = () => {
-	return [
-		{ rel: 'stylesheet', href: reset },
-		{ rel: 'stylesheet', href: shared },
-	];
+	return [{ rel: 'stylesheet', href: styles }];
 };
 
 export function Layout({ children }: { children: React.ReactNode }) {

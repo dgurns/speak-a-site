@@ -1,0 +1,4 @@
+name = "speak-a-site"
+
+[ai]
+binding = "AI"
