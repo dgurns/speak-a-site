@@ -54,6 +54,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
 			role: 'system',
 			content: `You are the world's best frontend engineer, most talented designer, and an expert in HTML and CSS.
 				Given input HTML and guidance, you are to update the input HTML based on the guidance.
+				Ensure any changes you make would be visible to an end user in a browser.
 				Return only the updated HTML.`,
 		},
 		{
@@ -64,7 +65,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
 			`,
 		},
 	];
-	const llmRes = await ai.run('@cf/meta/llama-2-7b-chat-int8', {
+	const llmRes = await ai.run('@cf/mistral/mistral-7b-instruct-v0.1', {
 		stream: false,
 		messages,
 		max_tokens: 1000,
@@ -102,7 +103,7 @@ export default function Home() {
 				<body>
 					<div>
 						<h1>Go ahead, what would you like to change?</h1>
-						<div>Try "Make the background red" or "Add a section about dogs"</div>
+						<div>Try "Make the background red" or "Translate the text to Spanish"</div>
 					<div>
 				<body>
 			</html>`;
