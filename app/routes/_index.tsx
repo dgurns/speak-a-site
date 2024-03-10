@@ -39,12 +39,15 @@ export async function action({ request, context }: ActionFunctionArgs) {
 	);
 	const existingHTML = formData.get('html') as string;
 
+	// Transcribe the audio to figure out what the user wants to change
 	const blob = formData.get('audio') as Blob;
 	const buffer = await blob.arrayBuffer();
 	const transcriptionRes = await ai.run('@cf/openai/whisper', {
 		audio: [...new Uint8Array(buffer)],
 	});
+	const transcriptionText = transcriptionRes.text;
 
+	// Ask the LLM to generate updated HTML
 	const messages = [
 		{
 			role: 'system',
@@ -57,11 +60,10 @@ export async function action({ request, context }: ActionFunctionArgs) {
 			role: 'user',
 			content: `Update this input HTML using the provided guidance.
 				<INPUT>${existingHTML}</INPUT>
-				<GUIDANCE>${transcriptionRes.text ?? 'None'}</GUIDANCE>
+				<GUIDANCE>${transcriptionText ?? 'None'}</GUIDANCE>
 			`,
 		},
 	];
-	console.log('messages', messages);
 	const llmRes = await ai.run('@cf/mistral/mistral-7b-instruct-v0.1', {
 		stream: false,
 		messages,
@@ -70,12 +72,13 @@ export async function action({ request, context }: ActionFunctionArgs) {
 		throw new Error('LLM returned unexpected streaming response');
 	}
 	const updatedHTML = llmRes.response ?? '';
+
+	// Parse the relevant HTML out of the LLM's response
 	const start = updatedHTML.indexOf('<OUTPUT>');
 	const end = updatedHTML.lastIndexOf('</OUTPUT>');
 	const cleanedStart = start === -1 ? 0 : start + 8;
 	const cleanedEnd = end === -1 ? updatedHTML.length : end;
 	const parsedHTML = updatedHTML.substring(cleanedStart, cleanedEnd);
-	console.log('parsedHTML', parsedHTML);
 
 	return json({ html: parsedHTML });
 }
@@ -90,15 +93,16 @@ export default function Home() {
 					<style>
 						html, body {
 							height: 100%;
-							width: 100%;
 							margin: 0;
-							padding: 0;
+							padding: 20px;
+							box-sizing: border-box;
 						}
 						.container {
 							display: flex;
 							flex-direction: row;
 							justify-content: center;
 							align-items: center;
+							text-align: center;
 							height: 100%;
 							width: 100%;
 						}
