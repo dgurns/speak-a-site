@@ -11,7 +11,7 @@ import {
 import { Ai } from '@cloudflare/ai';
 import styles from '~/styles/index.css?url';
 import RecordButton from '~/components/RecordButton';
-import { useFetcher, useActionData } from '@remix-run/react';
+import { useFetcher } from '@remix-run/react';
 
 export const links: LinksFunction = () => {
 	return [{ rel: 'stylesheet', href: styles }];
@@ -37,7 +37,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
 		request,
 		uploadHandler
 	);
-	const html = formData.get('html') as string;
+	const existingHTML = formData.get('html') as string;
 
 	const blob = formData.get('audio') as Blob;
 	const buffer = await blob.arrayBuffer();
@@ -49,20 +49,16 @@ export async function action({ request, context }: ActionFunctionArgs) {
 		{
 			role: 'system',
 			content: `You are the world's best frontend engineer and an expert in HTML and CSS.
-				Given existing HTML and guidance, you are to update the existing HTML based on the guidance. 
-				Return only the updated HTML.`,
+				Given input HTML and guidance, you are to update the input HTML based on the guidance.
+				Don't make any other changes beyond what is requested. 
+				Return the updated HTML within these tags: <OUTPUT> updated html goes here </OUTPUT>`,
 		},
 		{
 			role: 'user',
-			content: `Update this existing HTML using the provided guidance:
-					<existing-html>
-					${html}
-					</existing-html>
-
-					<guidance>
-					${transcriptionRes.text ?? 'None'}
-					</guidance>
-				`,
+			content: `Update this input HTML using the provided guidance.
+				<INPUT>${existingHTML}</INPUT>
+				<GUIDANCE>${transcriptionRes.text ?? 'None'}</GUIDANCE>
+			`,
 		},
 	];
 	console.log('messages', messages);
@@ -70,40 +66,70 @@ export async function action({ request, context }: ActionFunctionArgs) {
 		stream: false,
 		messages,
 	});
-	console.log('llmRes', llmRes);
 	if (llmRes instanceof ReadableStream) {
 		throw new Error('LLM returned unexpected streaming response');
 	}
+	const updatedHTML = llmRes.response ?? '';
+	const start = updatedHTML.indexOf('<OUTPUT>');
+	const end = updatedHTML.lastIndexOf('</OUTPUT>');
+	const cleanedStart = start === -1 ? 0 : start + 8;
+	const cleanedEnd = end === -1 ? updatedHTML.length : end;
+	const parsedHTML = updatedHTML.substring(cleanedStart, cleanedEnd);
+	console.log('parsedHTML', parsedHTML);
 
-	return json({ html: llmRes.response ?? '' });
+	return json({ html: parsedHTML });
 }
 
-export default function Index() {
-	const fetcher = useFetcher();
-
-	const data = useActionData<typeof action>();
-	const html = data?.html ?? '';
-	console.log('html', html);
+export default function Home() {
+	const fetcher = useFetcher<typeof action>();
+	const isLoading = fetcher.state !== 'idle';
+	const html = fetcher.data
+		? fetcher.data.html
+		: `<html>
+				<head>
+					<style>
+						html, body {
+							height: 100%;
+							width: 100%;
+							margin: 0;
+							padding: 0;
+						}
+						.container {
+							display: flex;
+							flex-direction: row;
+							justify-content: center;
+							align-items: center;
+							height: 100%;
+							width: 100%;
+						}
+					</style>
+				</head>
+				<body>
+					<div class="container">
+						<h1>Go ahead, what would you like to change?</h1>
+					<div>
+				<body>
+			</html>`;
 
 	return (
 		<div id="container">
-			<div
-				id="dynamic-content"
-				key={html}
-				dangerouslySetInnerHTML={{ __html: html }}
-			/>
+			<iframe title="Dynamic Content" id="dynamic-content" srcDoc={html} />
 			<div id="cta">
-				<RecordButton
-					onRecordingComplete={(blob) => {
-						const formData = new FormData();
-						formData.append('html', html);
-						formData.append('audio', blob);
-						fetcher.submit(formData, {
-							method: 'POST',
-							encType: 'multipart/form-data',
-						});
-					}}
-				/>
+				{isLoading ? (
+					'Generating...'
+				) : (
+					<RecordButton
+						onRecordingComplete={(blob) => {
+							const formData = new FormData();
+							formData.append('html', html);
+							formData.append('audio', blob);
+							fetcher.submit(formData, {
+								method: 'POST',
+								encType: 'multipart/form-data',
+							});
+						}}
+					/>
+				)}
 			</div>
 		</div>
 	);
