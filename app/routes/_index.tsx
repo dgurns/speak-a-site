@@ -1,35 +1,27 @@
-import type { MetaFunction } from "@remix-run/cloudflare";
+import type { MetaFunction, LinksFunction } from '@remix-run/cloudflare';
+import styles from '~/styles/index.css?url';
+
+export const links: LinksFunction = () => {
+	return [{ rel: 'stylesheet', href: styles }];
+};
 
 export const meta: MetaFunction = () => {
-  return [
-    { title: "New Remix App" },
-    {
-      name: "description",
-      content: "Welcome to Remix! Using Vite and Cloudflare!",
-    },
-  ];
+	return [
+		{ title: 'Speak a Site' },
+		{
+			name: 'description',
+			content: 'Speaking the web into existence using the magic of LLMs',
+		},
+	];
 };
 
 export default function Index() {
-  return (
-    <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
-      <h1>Welcome to Remix (with Vite and Cloudflare)</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-remix-site/"
-            rel="noreferrer"
-          >
-            Cloudflare Pages Docs - Remix guide
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
-    </div>
-  );
+	return (
+		<div id="container">
+			<div id="dynamic-content" dangerouslySetInnerHTML={{ __html: '' }} />
+			<div id="cta">
+				<button>Record</button>
+			</div>
+		</div>
+	);
 }
