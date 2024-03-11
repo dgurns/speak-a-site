@@ -1,6 +1,6 @@
 # Speak a Site
 
-Speaking the web into existence using the LLMs.
+Speaking the web into existence using LLMs.
 
 Built with Remix, Web Audio API, and Cloudflare Workers AI.
 
