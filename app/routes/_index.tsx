@@ -22,7 +22,7 @@ export const meta: MetaFunction = () => {
 		{ title: 'Speak a Site' },
 		{
 			name: 'description',
-			content: 'Speaking the web into existence using the magic of LLMs',
+			content: 'Speaking the web into existence using LLMs',
 		},
 	];
 };
